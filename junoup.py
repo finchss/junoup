@@ -162,9 +162,31 @@ def find_binary(search_dir: Path, binary_name: str) -> str | None:
     return None
 
 
+def download_and_install(linux_asset: dict, binary_path: str, binary_name: str):
+    """Download and install the binary to the specified path."""
+    if not linux_asset:
+        print("Error: No Linux amd64 asset found in release", file=sys.stderr)
+        sys.exit(1)
+
+    download_url = linux_asset.get('browser_download_url')
+    target_path = Path(binary_path).resolve()
+
+    # Extract to temp directory and copy binary
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        extracted_binary = download_and_extract(download_url, tmp_dir, binary_name)
+
+        # Copy binary to the specified location
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+        print(f"Installing binary to {target_path}...")
+        shutil.copy2(extracted_binary, target_path)
+        os.chmod(target_path, 0o755)
+
+    print("Cleaned up temporary files.")
+
+
 def main():
     parser = argparse.ArgumentParser(
-        description="Compare local junocashd version with latest GitHub release"
+        description="Check and update junocashd to latest GitHub release"
     )
     parser.add_argument(
         "binary_path",
@@ -186,7 +208,7 @@ def main():
     args = parser.parse_args()
     binary_path = args.binary_path
 
-    # Fetch release info first (needed for download if binary missing)
+    # Fetch release info
     print(f"Fetching latest release from GitHub ({args.repo})...")
     release_info = get_latest_github_release(args.repo)
 
@@ -199,30 +221,14 @@ def main():
     if linux_asset:
         print(f"Linux amd64 asset: {linux_asset.get('name')}")
 
-    # Check if binary exists, download if not
+    # Check if binary exists
     if not os.path.exists(binary_path):
         print(f"\nBinary not found at '{binary_path}'")
+        download_and_install(linux_asset, binary_path, args.binary_name)
+        print(f"\nInstalled {remote_version}")
+        return 0
 
-        if not linux_asset:
-            print("Error: No Linux amd64 asset found in release", file=sys.stderr)
-            sys.exit(1)
-
-        download_url = linux_asset.get('browser_download_url')
-        target_path = Path(binary_path).resolve()
-
-        # Extract to temp directory and copy binary
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            extracted_binary = download_and_extract(download_url, tmp_dir, args.binary_name)
-
-            # Copy binary to the specified location
-            target_path.parent.mkdir(parents=True, exist_ok=True)
-            print(f"Copying binary to {target_path}...")
-            shutil.copy2(extracted_binary, target_path)
-            os.chmod(target_path, 0o755)
-
-        print("Cleaned up temporary files.")
-        binary_path = str(target_path)
-
+    # Get local version
     print(f"\nChecking local binary: {binary_path}")
     local_version = get_local_version(binary_path)
     print(f"Local version: {local_version}")
@@ -231,15 +237,17 @@ def main():
     local_normalized = normalize_version(local_version)
     remote_normalized = normalize_version(remote_version)
 
-    print("\n" + "=" * 50)
     if local_normalized == remote_normalized:
-        print("Versions match! You are up to date.")
+        print("\n" + "=" * 50)
+        print("Already up to date.")
         return 0
-    else:
-        print(f"Version mismatch!")
-        print(f"  Local:  {local_version}")
-        print(f"  Remote: {remote_version}")
-        return 1
+
+    # Version mismatch - update
+    print(f"\nUpdating {local_version} -> {remote_version}")
+    download_and_install(linux_asset, binary_path, args.binary_name)
+    print("\n" + "=" * 50)
+    print(f"Updated to {remote_version}")
+    return 0
 
 
 if __name__ == "__main__":
