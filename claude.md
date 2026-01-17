@@ -13,10 +13,10 @@ A Python script that checks if a local `junocashd` binary version matches the la
 
 ```bash
 # Default (looks for ./junocashd)
-python version_checker.py
+python junoup.py
 
 # Specify a binary path
-python version_checker.py /path/to/junocashd
+python junoup.py /path/to/junocashd
 ```
 
 ---
