@@ -1,4 +1,4 @@
-# upjunod
+# junoup
 
 A Python script that checks if a local `junocashd` binary version matches the latest GitHub release from [juno-cash/junocash](https://github.com/juno-cash/junocash/releases).
 
