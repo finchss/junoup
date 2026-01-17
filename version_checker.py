@@ -11,6 +11,7 @@ import shutil
 import subprocess
 import sys
 import tarfile
+import tempfile
 import urllib.request
 import json
 from pathlib import Path
@@ -207,15 +208,19 @@ def main():
             sys.exit(1)
 
         download_url = linux_asset.get('browser_download_url')
-        dest_dir = str(Path(binary_path).parent.resolve())
-
-        extracted_binary = download_and_extract(download_url, dest_dir, args.binary_name)
-
-        # Copy binary to the specified location
         target_path = Path(binary_path).resolve()
-        print(f"Copying binary to {target_path}...")
-        shutil.copy2(extracted_binary, target_path)
-        os.chmod(target_path, 0o755)
+
+        # Extract to temp directory and copy binary
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            extracted_binary = download_and_extract(download_url, tmp_dir, args.binary_name)
+
+            # Copy binary to the specified location
+            target_path.parent.mkdir(parents=True, exist_ok=True)
+            print(f"Copying binary to {target_path}...")
+            shutil.copy2(extracted_binary, target_path)
+            os.chmod(target_path, 0o755)
+
+        print("Cleaned up temporary files.")
         binary_path = str(target_path)
 
     print(f"\nChecking local binary: {binary_path}")
