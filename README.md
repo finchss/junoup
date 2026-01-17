@@ -21,10 +21,10 @@ python junoup.py /path/to/junocashd
 
 ## Systemd Service Installation
 
-To install junocashd as a systemd service with auto-update on startup:
+One-liner to install junocashd as a systemd service with auto-update on startup:
 
 ```bash
-sudo ./setup.sh
+curl -sSL https://raw.githubusercontent.com/finchss/junoup/master/setup.sh | sudo bash
 ```
 
 This will:
