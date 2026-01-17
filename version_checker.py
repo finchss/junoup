@@ -7,6 +7,7 @@ with the latest GitHub release. Downloads and extracts if binary doesn't exist.
 import argparse
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tarfile
@@ -208,7 +209,14 @@ def main():
         download_url = linux_asset.get('browser_download_url')
         dest_dir = str(Path(binary_path).parent.resolve())
 
-        binary_path = download_and_extract(download_url, dest_dir, args.binary_name)
+        extracted_binary = download_and_extract(download_url, dest_dir, args.binary_name)
+
+        # Copy binary to the specified location
+        target_path = Path(binary_path).resolve()
+        print(f"Copying binary to {target_path}...")
+        shutil.copy2(extracted_binary, target_path)
+        os.chmod(target_path, 0o755)
+        binary_path = str(target_path)
 
     print(f"\nChecking local binary: {binary_path}")
     local_version = get_local_version(binary_path)
