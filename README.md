@@ -21,6 +21,11 @@ python junoup.py /path/to/junocashd
 
 ## Systemd Service Installation
 
+Install required dependency (Debian/Ubuntu):
+```bash
+sudo apt-get install libnuma1
+```
+
 One-liner to install junocashd as a systemd service with auto-update on startup:
 
 ```bash
