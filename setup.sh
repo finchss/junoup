@@ -62,7 +62,7 @@ Group=${GROUP}
 WorkingDirectory=${WORKING_DIR}
 ExecStartPre=+-/home/juno/bin/junoup.py /home/juno/bin/junocashd
 ExecStartPre=+-/bin/chown juno:juno /home/juno/bin/junocashd
-ExecStart=${EXECUTABLE}
+ExecStart=${EXECUTABLE}  -randomxfastmode=0 -disablewallet=1
 Restart=on-failure
 RestartSec=10
 
